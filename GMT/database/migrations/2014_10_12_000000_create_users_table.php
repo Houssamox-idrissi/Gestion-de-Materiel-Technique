@@ -17,6 +17,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            // TES CHAMPS AJOUTÉS
+            $table->enum('role', ['admin', 'etudiant'])->default('etudiant');
+            $table->string('matricule')->nullable();
+            $table->string('telephone')->nullable();
+            $table->string('departement')->nullable();
+
             $table->rememberToken();
             $table->timestamps();
         });
