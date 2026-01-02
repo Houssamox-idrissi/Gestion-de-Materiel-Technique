@@ -51,18 +51,17 @@ class Materiel extends Model
         return $query->where('categorie_id', $categorieId);
     }
 
-    public function genererQRCode()
+public function genererQRCode()
 {
     $url = route('materiels.show', $this->id);
-    $filename = 'qrcodes/materiel-' . $this->id . '.png';
+    $filename = 'qrcodes/materiel-' . $this->id . '.svg';  // ← .SVG au lieu de .png
     $path = public_path($filename);
 
-    // Génère le QR Code
-    \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+    // SVG n'a pas besoin d'Imagick, GD suffit
+    \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
         ->size(200)
         ->generate($url, $path);
 
-    // Sauvegarde le chemin dans la base
     $this->update(['qr_code_path' => $filename]);
 
     return $filename;

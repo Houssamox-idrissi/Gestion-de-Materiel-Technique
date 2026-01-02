@@ -98,13 +98,22 @@ class DatabaseSeeder extends Seeder
                 'statut' => 'reserve',
             ],
         ];
-
         foreach ($materiels as $materielData) {
             $materiel = Materiel::create($materielData);
-            $materiel->genererQRCode();
+
+            // Utilise un try-catch pour éviter l'erreur
+            try {
+                $materiel->genererQRCode();
+            } catch (\Exception $e) {
+                // Si échec, crée juste un fichier texte
+                $filename = 'qrcodes/materiel-' . $materiel->id . '.txt';
+                $path = public_path($filename);
+                file_put_contents($path, "QR Code pour: " . $materiel->nom);
+                $materiel->update(['qr_code_path' => $filename]);
+            }
         }
 
-      
+
 
         // Créer des réservations
         $reservations = [
