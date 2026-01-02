@@ -12,7 +12,6 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Créer les utilisateurs
         $admin = User::create([
             'name' => 'Admin Lab',
             'email' => 'admin@lab.com',
@@ -43,7 +42,7 @@ class DatabaseSeeder extends Seeder
             'departement' => 'Électronique',
         ]);
 
-        // Créer les catégories
+
         $categories = [
             ['nom' => 'Électronique', 'description' => 'Matériel électronique de mesure'],
             ['nom' => 'Informatique', 'description' => 'Ordinateurs et périphériques'],
@@ -55,7 +54,6 @@ class DatabaseSeeder extends Seeder
             Categorie::create($categorie);
         }
 
-        // Créer les matériels
         $materiels = [
             [
                 'nom' => 'Oscilloscope numérique',
@@ -100,12 +98,9 @@ class DatabaseSeeder extends Seeder
         ];
         foreach ($materiels as $materielData) {
             $materiel = Materiel::create($materielData);
-
-            // Utilise un try-catch pour éviter l'erreur
             try {
                 $materiel->genererQRCode();
             } catch (\Exception $e) {
-                // Si échec, crée juste un fichier texte
                 $filename = 'qrcodes/materiel-' . $materiel->id . '.txt';
                 $path = public_path($filename);
                 file_put_contents($path, "QR Code pour: " . $materiel->nom);
@@ -113,9 +108,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-
-
-        // Créer des réservations
         $reservations = [
             [
                 'materiel_id' => 1,
@@ -140,9 +132,5 @@ class DatabaseSeeder extends Seeder
         foreach ($reservations as $reservation) {
             Reservation::create($reservation);
         }
-
-        $this->command->info('✅ Base de données peuplée avec succès !');
-        $this->command->info('👨‍💼 Admin: admin@lab.com / password123');
-        $this->command->info('👨‍🎓 Étudiants: jean.dupont@ecole.com / password123');
     }
 }
