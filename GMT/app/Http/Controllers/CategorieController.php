@@ -1,64 +1,77 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Models\Categorie;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategorieController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (Auth::user()->role != 'admin') {
+                abort(403, 'Accès réservé aux administrateurs.');
+            }
+            return $next($request);
+        })->except(['index', 'show']);
+    }
+
     public function index()
     {
-        //
+        $categories = Categorie::withCount('materiels')->get();
+        return view('categories.index', compact('categories'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nom' => 'required|string|max:100|unique:categories',
+            'description' => 'nullable|string'
+        ]);
+
+        Categorie::create([
+            'nom' => $request->nom,
+            'description' => $request->description
+        ]);
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Catégorie créée avec succès.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(Categorie $categorie)
     {
-        //
+        $materiels = $categorie->materiels()->paginate(10);
+        return view('categories.show', compact('categorie', 'materiels'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Categorie $categorie)
     {
-        //
+        $request->validate([
+            'nom' => 'required|string|max:100|unique:categories,nom,' . $categorie->id,
+            'description' => 'nullable|string'
+        ]);
+
+        $categorie->update([
+            'nom' => $request->nom,
+            'description' => $request->description
+        ]);
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Catégorie mise à jour.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Categorie $categorie)
     {
-        //
-    }
+        if ($categorie->materiels()->count() > 0) {
+            return redirect()->route('categories.index')
+                ->with('error', 'Impossible de supprimer : catégorie utilisée par des matériels.');
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $categorie->delete();
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Catégorie supprimée.');
     }
 }

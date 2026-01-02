@@ -50,4 +50,21 @@ class Materiel extends Model
     {
         return $query->where('categorie_id', $categorieId);
     }
+
+    public function genererQRCode()
+{
+    $url = route('materiels.show', $this->id);
+    $filename = 'qrcodes/materiel-' . $this->id . '.png';
+    $path = public_path($filename);
+
+    // Génère le QR Code
+    \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+        ->size(200)
+        ->generate($url, $path);
+
+    // Sauvegarde le chemin dans la base
+    $this->update(['qr_code_path' => $filename]);
+
+    return $filename;
+}
 }
