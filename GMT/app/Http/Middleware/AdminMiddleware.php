@@ -18,6 +18,12 @@ class AdminMiddleware
                 ->with('error', 'Accès réservé aux administrateurs.');
         }
 
+        if (!Auth::user()->role != 'etudiant') {
+            return redirect()->route('etud')
+                ->with('error', 'Accès réservé aux administrateurs.');
+        }
+
+
         return $next($request);
     }
 }
