@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Materiel;
@@ -13,28 +14,39 @@ class MaterielController extends Controller
         $this->middleware('auth');
     }
 
-    public function index(Request $request)
-    {
-        $query = Materiel::with('categorie');
+  public function index(Request $request)
+{
+    $materiels = Materiel::with('categorie')
+        ->where(function ($query) use ($request) {
 
-        if ($request->has('search')) {
-            $query->where('nom', 'like', '%'.$request->search.'%')
-                  ->orWhere('numero_serie', 'like', '%'.$request->search.'%');
-        }
+            // 🔍 SEARCH
+            if ($request->filled('search')) {
+                $search = trim($request->search);
 
-        if ($request->has('categorie_id')) {
-            $query->where('categorie_id', $request->categorie_id);
-        }
+                $query->where(function ($q) use ($search) {
+                    $q->where('nom', 'LIKE', "%{$search}%")
+                      ->orWhere('numero_serie', 'LIKE', "%{$search}%");
+                });
+            }
 
-        if ($request->has('statut')) {
-            $query->where('statut', $request->statut);
-        }
+            if ($request->filled('categorie_id')) {
+                $query->where('categorie_id', $request->categorie_id);
+            }
 
-        $materiels = $query->paginate(10);
-        $categories = Categorie::all();
+            if ($request->filled('statut')) {
+                $query->where('statut', $request->statut);
+            }
 
-        return view('materiels.index', compact('materiels', 'categories'));
-    }
+        })
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->withQueryString();
+
+    $categories = Categorie::orderBy('nom')->get();
+
+    return view('materiels.index', compact('materiels', 'categories'));
+}
+
 
     public function create()
     {
@@ -90,7 +102,7 @@ class MaterielController extends Controller
 
         $request->validate([
             'nom' => 'required|string|max:255',
-            'numero_serie' => 'required|string|unique:materiels,numero_serie,'.$materiel->id,
+            'numero_serie' => 'required|string|unique:materiels,numero_serie,' . $materiel->id,
             'description' => 'nullable|string',
             'categorie_id' => 'required|exists:categories,id',
             'localisation' => 'required|string|max:255',
@@ -114,4 +126,23 @@ class MaterielController extends Controller
         return redirect()->route('materiels.index')
             ->with('success', 'Matériel supprimé.');
     }
+
+    public function apiShow(Materiel $materiel)
+    {
+        return response()->json([
+            'id' => $materiel->id,
+            'nom' => $materiel->nom,
+            'numero_serie' => $materiel->numero_serie,
+            'description' => $materiel->description,
+            'categorie_id' => $materiel->categorie_id,
+            'localisation' => $materiel->localisation,
+            'statut' => $materiel->statut,
+            'qr_code_path' => $materiel->qr_code_path,
+        ]);
+    }
+    public function json(Materiel $materiel)
+{
+    return response()->json($materiel);
+}
+
 }

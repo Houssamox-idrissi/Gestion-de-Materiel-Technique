@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/materiels/{materiel}/json', [MaterielController::class, 'json'])
+    ->name('materiels.json');
+
 
 Route::get('/test-tailwind', function() {
     return view('test');

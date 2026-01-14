@@ -114,9 +114,6 @@
                                                 <div class="text-sm font-semibold text-gray-900 group-hover:text-[#121929] transition-colors">
                                                     {{ $category->nom }}
                                                 </div>
-                                                <div class="text-xs text-gray-500">
-                                                    {{ $category->materiels_count }} matériel(s)
-                                                </div>
                                             </div>
                                         </div>
                                     </td>
