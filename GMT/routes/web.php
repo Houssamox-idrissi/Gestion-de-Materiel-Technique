@@ -22,11 +22,15 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'etudiantDashboard'])
+Route::get('/test-tailwind', function() {
+    return view('test');
+});
+
+Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])
 ->middleware(['auth', 'verified'])
 ->name('dashboard');
 
-Route::get('/dashboard/etud', [DashboardController::class, 'adminDashboard'])
+Route::get('/dashboard/etud', [DashboardController::class, 'etudiantDashboard'])
 ->middleware(['auth', 'verified'])
 ->name('etud');
 
@@ -39,26 +43,51 @@ Route::middleware('auth')->group(function () {
 });
 
 //Categ
-Route::resource('categories', CategorieController::class)->middleware('auth');
+Route::resource('categories', CategorieController::class)->except(['create', 'edit']);
+Route::get('/categories/create', [CategorieController::class, 'create'])
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('categories.create');
+
+Route::get('/categories/{categorie}/edit', [CategorieController::class, 'edit'])
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('categories.edit');
 //Materiel
 Route::resource('materiels', MaterielController::class)->middleware('auth');
 
 //Réservation
-Route::resource('reservations', ReservationController::class)
-    ->middleware('auth');
-
 Route::middleware(['auth'])->group(function () {
-    Route::post('/reservations/{reservation}/valider', [ReservationController::class, 'valider'])
-        ->name('reservations.valider');
+    Route::get('/reservations', [ReservationController::class, 'index'])
+        ->name('reservations.index');
 
-    Route::post('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler'])
-        ->name('reservations.annuler');
+    Route::get('/reservations/create', [ReservationController::class, 'create'])
+        ->name('reservations.create');
 
-    Route::post('/reservations/{reservation}/checkout', [ReservationController::class, 'checkout'])
-        ->name('reservations.checkout');
+    Route::post('/reservations', [ReservationController::class, 'store'])
+        ->name('reservations.store');
 
-    Route::post('/reservations/{reservation}/checkin', [ReservationController::class, 'checkin'])
-        ->name('reservations.checkin');
+    Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])
+        ->name('reservations.show');
+
+    Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])
+        ->name('reservations.edit');
+
+    Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])
+        ->name('reservations.update');
+
+    Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])
+        ->name('reservations.destroy');
+});
+
+// Admin reservations (all reservations)
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/reservations', [ReservationController::class, 'adminIndex'])
+        ->name('reservations.admin');
+
+    Route::get('/admin/reservations/{reservation}/edit', [ReservationController::class, 'adminEdit'])
+        ->name('reservations.admin.edit');
+
+    Route::put('/admin/reservations/{reservation}', [ReservationController::class, 'adminUpdate'])
+        ->name('reservations.admin.update');
 });
 
 require __DIR__.'/auth.php';

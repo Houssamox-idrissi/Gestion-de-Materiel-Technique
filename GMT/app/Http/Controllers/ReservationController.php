@@ -130,7 +130,7 @@ class ReservationController extends Controller
 
         return back()->with('success', 'Check-out enregistré.');
     }
-    
+
     public function checkin(Reservation $reservation)
     {
         if (Auth::user()->role != 'admin') {
@@ -145,5 +145,68 @@ class ReservationController extends Controller
         $reservation->materiel()->update(['statut' => 'disponible']);
 
         return back()->with('success', 'Check-in enregistré. Matériel marqué comme disponible.');
+    }
+
+    // Additional admin methods for managing all reservations can be added here
+     public function adminIndex(Request $request)
+    {
+        $this->authorize('viewAny', Reservation::class);
+
+        $status = $request->get('status');
+        $query = Reservation::with(['user', 'materiel']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $reservations = $query->latest()->paginate(20);
+
+        $stats = [
+            'total' => Reservation::count(),
+            'pending' => Reservation::where('status', 'pending')->count(),
+            'approved' => Reservation::where('status', 'approved')->count(),
+            'rejected' => Reservation::where('status', 'rejected')->count(),
+            'returned' => Reservation::where('status', 'returned')->count(),
+        ];
+
+        return view('reservations.admin-index', compact('reservations', 'stats'));
+    }
+
+    /**
+     * Edit reservation (admin only)
+     */
+    public function adminEdit(Reservation $reservation)
+    {
+        $this->authorize('update', $reservation);
+
+        return view('reservations.admin-edit', compact('reservation'));
+    }
+
+    /**
+     * Update reservation (admin only)
+     */
+    public function adminUpdate(Request $request, Reservation $reservation)
+    {
+        $this->authorize('update', $reservation);
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,approved,rejected,returned',
+            'admin_notes' => 'nullable|string|max:500',
+        ]);
+
+        $reservation->update($validated);
+
+        // If status changed to approved, update material availability
+        if ($reservation->wasChanged('status') && $validated['status'] == 'approved') {
+            $reservation->materiel->update(['est_disponible' => false]);
+        }
+
+        // If status changed to returned, update material availability
+        if ($reservation->wasChanged('status') && $validated['status'] == 'returned') {
+            $reservation->materiel->update(['est_disponible' => true]);
+        }
+
+        return redirect()->route('reservations.admin')
+            ->with('success', 'Réservation mise à jour avec succès.');
     }
 }
