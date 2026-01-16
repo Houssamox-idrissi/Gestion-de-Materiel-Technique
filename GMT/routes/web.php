@@ -7,37 +7,24 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
 Route::get('/', function () {
     return view('welcome');
 });
+
 Route::get('/materiels/{materiel}/json', [MaterielController::class, 'json'])
     ->name('materiels.json');
 
-
-Route::get('/test-tailwind', function() {
+Route::get('/test-tailwind', function () {
     return view('test');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])
-->middleware(['auth', 'verified'])
-->name('dashboard');
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::get('/dashboard/etud', [DashboardController::class, 'etudiantDashboard'])
-->middleware(['auth', 'verified'])
-->name('etud');
-
-
+    ->middleware(['auth', 'verified'])
+    ->name('etud');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -45,7 +32,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-//Categ
 Route::resource('categories', CategorieController::class)->except(['create', 'edit']);
 Route::get('/categories/create', [CategorieController::class, 'create'])
     ->middleware(['auth', 'verified', 'admin'])
@@ -54,43 +40,47 @@ Route::get('/categories/create', [CategorieController::class, 'create'])
 Route::get('/categories/{categorie}/edit', [CategorieController::class, 'edit'])
     ->middleware(['auth', 'verified', 'admin'])
     ->name('categories.edit');
-//Materiel
+
 Route::resource('materiels', MaterielController::class)->middleware('auth');
 
-//Réservation
 Route::middleware(['auth'])->group(function () {
-    Route::get('/reservations', [ReservationController::class, 'index'])
-        ->name('reservations.index');
+    // Route pour JSON (doit être avant resource)
+    Route::get('/reservations/{reservation}/json', [ReservationController::class, 'showJson'])
+        ->name('reservations.show.json');
 
-    Route::get('/reservations/create', [ReservationController::class, 'create'])
-        ->name('reservations.create');
+    // Route resource complète (INCLUT update)
+    Route::resource('reservations', ReservationController::class)->except(['edit']);
 
-    Route::post('/reservations', [ReservationController::class, 'store'])
-        ->name('reservations.store');
+    // Actions supplémentaires
+    Route::post('/reservations/{reservation}/valider', [ReservationController::class, 'valider'])
+        ->name('reservations.valider');
 
-    Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])
-        ->name('reservations.show');
+    Route::post('/reservations/{reservation}/annuler', [ReservationController::class, 'annuler'])
+        ->name('reservations.annuler');
 
-    Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'edit'])
-        ->name('reservations.edit');
+    Route::post('/reservations/{reservation}/checkout', [ReservationController::class, 'checkout'])
+        ->name('reservations.checkout');
 
-    Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])
-        ->name('reservations.update');
+    Route::post('/reservations/{reservation}/checkin', [ReservationController::class, 'checkin'])
+        ->name('reservations.checkin');
 
-    Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])
-        ->name('reservations.destroy');
+    Route::post('/reservations/check-availability', [ReservationController::class, 'checkAvailabilityAjax'])
+        ->name('reservations.check.availability');
 });
 
-// Admin reservations (all reservations)
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/reservations', [ReservationController::class, 'adminIndex'])
-        ->name('reservations.admin');
+// Routes admin (optionnel - si vous voulez une interface admin séparée)
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('reservations.')->group(function () {
+    Route::get('/reservations', [ReservationController::class, 'adminIndex'])
+        ->name('admin');
 
-    Route::get('/admin/reservations/{reservation}/edit', [ReservationController::class, 'adminEdit'])
-        ->name('reservations.admin.edit');
+    Route::get('/reservations/{reservation}/edit', [ReservationController::class, 'adminEdit'])
+        ->name('admin.edit');
 
-    Route::put('/admin/reservations/{reservation}', [ReservationController::class, 'adminUpdate'])
-        ->name('reservations.admin.update');
+    Route::put('/reservations/{reservation}', [ReservationController::class, 'adminUpdate'])
+        ->name('admin.update');
 });
+Route::get('/reservations/{reservation}/json', [ReservationController::class, 'json'])
+    ->middleware('auth');
 
-require __DIR__.'/auth.php';
+
+require __DIR__ . '/auth.php';

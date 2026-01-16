@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
@@ -15,30 +16,86 @@ class ReservationController extends Controller
 
     public function index(Request $request)
     {
+        $query = null;
+
         if (Auth::user()->role == 'admin') {
-            $reservations = Reservation::with(['materiel', 'utilisateur'])
-                ->latest()
-                ->paginate(15);
+            $query = Reservation::with(['materiel', 'utilisateur']);
         } else {
-            $reservations = Reservation::with('materiel')
-                ->where('user_id', Auth::id())
-                ->latest()
-                ->paginate(10);
+            $query = Reservation::with('materiel')
+                ->where('user_id', Auth::id());
         }
+
+        // Apply filters
+        if ($request->has('search') && $request->search != '') {
+            $query->whereHas('materiel', function ($q) use ($request) {
+                $q->where('nom', 'like', '%' . $request->search . '%')
+                    ->orWhere('numero_serie', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->has('statut') && $request->statut != '') {
+            $query->where('statut', $request->statut);
+        }
+
+        if ($request->has('date_reservation') && $request->date_reservation != '') {
+            $query->whereDate('date_reservation', $request->date_reservation);
+        }
+
+        $reservations = $query->latest()->paginate(15);
 
         return view('reservations.index', compact('reservations'));
     }
 
-    public function create(Request $request)
+    // ReservationController.php
+
+
+
+    public function update(Request $request, Reservation $reservation)
     {
-        $materiel = null;
-        if ($request->has('materiel_id')) {
-            $materiel = Materiel::find($request->materiel_id);
+        try {
+            $validated = $request->validate([
+                'materiel_id' => 'required|exists:materiels,id',
+                'date_reservation' => 'required|date',
+                'heure_debut' => 'required|date_format:H:i',  // Form sends HH:MM
+                'heure_fin' => 'required|date_format:H:i|after:heure_debut',  // Form sends HH:MM
+                'objet' => 'required|string|max:255',
+                'commentaire' => 'nullable|string',
+                'statut' => 'sometimes|in:en_attente,confirmee,annulee,terminee',
+            ]);
+
+            // ADD SECONDS FOR DATABASE
+            $validated['heure_debut'] = $validated['heure_debut'] . ':00';
+            $validated['heure_fin'] = $validated['heure_fin'] . ':00';
+
+            $reservation->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Réservation mise à jour avec succès.',
+                'redirect' => route('reservations.index')
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors(),
+                'message' => 'Veuillez corriger les erreurs dans le formulaire.'
+            ], 422);
         }
+    }
 
-        $materiels = Materiel::where('statut', 'disponible')->get();
-
-        return view('reservations.create', compact('materiels', 'materiel'));
+    public function showJson(Reservation $reservation)
+    {
+        return response()->json([
+            'id' => $reservation->id,
+            'materiel_id' => $reservation->materiel_id,
+            'date_reservation' => $reservation->date_reservation,
+            // REMOVE SECONDS for form (HH:MM:SS -> HH:MM)
+            'heure_debut' => substr($reservation->heure_debut, 0, 5),
+            'heure_fin' => substr($reservation->heure_fin, 0, 5),
+            'objet' => $reservation->objet,
+            'commentaire' => $reservation->commentaire,
+            'statut' => $reservation->statut,
+        ]);
     }
 
     public function store(Request $request)
@@ -54,10 +111,23 @@ class ReservationController extends Controller
 
         $materiel = Materiel::find($request->materiel_id);
 
-        if (!$materiel->estDisponible($request->date_reservation, $request->heure_debut, $request->heure_fin)) {
-            return back()->withErrors([
-                'heure_debut' => 'Ce créneau n\'est pas disponible. Veuillez choisir un autre horaire.'
-            ])->withInput();
+        // Vérifier la disponibilité avec une méthode plus précise
+        $isAvailable = $this->checkAvailability(
+            $request->materiel_id,
+            $request->date_reservation,
+            $request->heure_debut,
+            $request->heure_fin,
+            null // Pas d'ID à exclure pour une nouvelle réservation
+        );
+
+        if (!$isAvailable) {
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'heure_debut' => ['Ce créneau horaire est déjà réservé. Veuillez choisir un autre horaire.'],
+                    'heure_fin' => ['Ce créneau horaire est déjà réservé. Veuillez choisir un autre horaire.']
+                ]
+            ], 422);
         }
 
         $reservation = Reservation::create([
@@ -75,20 +145,21 @@ class ReservationController extends Controller
             $materiel->update(['statut' => 'reserve']);
         }
 
-        return redirect()->route('reservations.index')
-            ->with('success', (Auth::user()->role == 'admin')
+        // STOCKER LA SESSION POUR LE MESSAGE
+        session()->flash('reservation_created', true);
+        session()->flash('success', (Auth::user()->role == 'admin')
+            ? 'Réservation confirmée avec succès.'
+            : 'Réservation soumise en attente de confirmation.');
+
+        return response()->json([
+            'success' => true,
+            'message' => (Auth::user()->role == 'admin')
                 ? 'Réservation confirmée avec succès.'
-                : 'Réservation soumise en attente de confirmation.');
+                : 'Réservation soumise en attente de confirmation.',
+            'redirect' => route('reservations.index')
+        ]);
     }
 
-    public function show(Reservation $reservation)
-    {
-        if (Auth::user()->role != 'admin' && $reservation->user_id != Auth::id()) {
-            abort(403, 'Accès non autorisé.');
-        }
-
-        return view('reservations.show', compact('reservation'));
-    }
 
     public function valider(Reservation $reservation)
     {
@@ -148,7 +219,7 @@ class ReservationController extends Controller
     }
 
     // Additional admin methods for managing all reservations can be added here
-     public function adminIndex(Request $request)
+    public function adminIndex(Request $request)
     {
         $this->authorize('viewAny', Reservation::class);
 
@@ -208,5 +279,131 @@ class ReservationController extends Controller
 
         return redirect()->route('reservations.admin')
             ->with('success', 'Réservation mise à jour avec succès.');
+    }
+
+//     public function update(Request $request, Reservation $reservation)
+// {
+//     try {
+//         // Format time to include seconds before validation
+//         if ($request->heure_debut && strlen($request->heure_debut) == 5) {
+//             $request->merge(['heure_debut' => $request->heure_debut . ':00']);
+//         }
+
+//         if ($request->heure_fin && strlen($request->heure_fin) == 5) {
+//             $request->merge(['heure_fin' => $request->heure_fin . ':00']);
+//         }
+
+//         $validated = $request->validate([
+//             'materiel_id' => 'required|exists:materiels,id',
+//             'date_reservation' => 'required|date',
+//             'heure_debut' => 'required|date_format:H:i:s',
+//             'heure_fin' => 'required|date_format:H:i:s|after:heure_debut',
+//             'objet' => 'required|string|max:255',
+//             'commentaire' => 'nullable|string',
+//             'statut' => 'sometimes|in:en_attente,confirmee,annulee,terminee',
+//         ]);
+
+//         $reservation->update($validated);
+
+//         // Return JSON response for AJAX
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'Réservation mise à jour avec succès.',
+//             'redirect' => route('reservations.index')
+//         ]);
+
+//     } catch (\Illuminate\Validation\ValidationException $e) {
+//         // Return validation errors as JSON
+//         return response()->json([
+//             'success' => false,
+//             'errors' => $e->errors(),
+//             'message' => 'Veuillez corriger les erreurs dans le formulaire.'
+//         ], 422);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'Une erreur est survenue: ' . $e->getMessage()
+//         ], 500);
+//     }
+// }
+
+
+    /**
+     * Vérifie la disponibilité d'un créneau horaire
+     */
+    private function checkAvailability($materielId, $date, $heureDebut, $heureFin, $excludeReservationId = null)
+    {
+        // Convertir les heures en objets DateTime pour comparaison
+        $debut = \Carbon\Carbon::createFromFormat('H:i', $heureDebut);
+        $fin = \Carbon\Carbon::createFromFormat('H:i', $heureFin);
+
+        // Vérifier que l'heure de fin est après l'heure de début
+        if ($fin <= $debut) {
+            return false;
+        }
+
+        // Chercher les réservations en conflit
+        $query = Reservation::where('materiel_id', $materielId)
+            ->where('date_reservation', $date)
+            ->where('statut', '!=', 'annulee') // Exclure les réservations annulées
+            ->where(function ($q) use ($debut, $fin) {
+                // Vérifier les chevauchements
+                $q->where(function ($q2) use ($debut, $fin) {
+                    // Cas 1: La nouvelle réservation commence pendant une réservation existante
+                    $q2->where('heure_debut', '<=', $debut->format('H:i'))
+                        ->where('heure_fin', '>', $debut->format('H:i'));
+                })->orWhere(function ($q2) use ($debut, $fin) {
+                    // Cas 2: La nouvelle réservation se termine pendant une réservation existante
+                    $q2->where('heure_debut', '<', $fin->format('H:i'))
+                        ->where('heure_fin', '>=', $fin->format('H:i'));
+                })->orWhere(function ($q2) use ($debut, $fin) {
+                    // Cas 3: La nouvelle réservation englobe une réservation existante
+                    $q2->where('heure_debut', '>=', $debut->format('H:i'))
+                        ->where('heure_fin', '<=', $fin->format('H:i'));
+                })->orWhere(function ($q2) use ($debut, $fin) {
+                    // Cas 4: La réservation existante englobe la nouvelle réservation
+                    $q2->where('heure_debut', '<=', $debut->format('H:i'))
+                        ->where('heure_fin', '>=', $fin->format('H:i'));
+                });
+            });
+
+        // Exclure une réservation spécifique (pour l'édition)
+        if ($excludeReservationId) {
+            $query->where('id', '!=', $excludeReservationId);
+        }
+
+        // Si on trouve des réservations en conflit, le créneau n'est pas disponible
+        return $query->count() === 0;
+    }
+
+    public function checkAvailabilityAjax(Request $request)
+    {
+        $request->validate([
+            'materiel_id' => 'required|exists:materiels,id',
+            'date_reservation' => 'required|date',
+            'heure_debut' => 'required|date_format:H:i',
+            'heure_fin' => 'required|date_format:H:i|after:heure_debut',
+            'exclude_reservation_id' => 'nullable|exists:reservations,id'
+        ]);
+
+        $isAvailable = $this->checkAvailability(
+            $request->materiel_id,
+            $request->date_reservation,
+            $request->heure_debut,
+            $request->heure_fin,
+            $request->exclude_reservation_id
+        );
+
+        return response()->json([
+            'available' => $isAvailable,
+            'message' => $isAvailable
+                ? 'Ce créneau est disponible.'
+                : 'Ce créneau est déjà réservé.'
+        ]);
+    }
+
+    public function json(Reservation $reservation)
+    {
+        return response()->json($reservation);
     }
 }

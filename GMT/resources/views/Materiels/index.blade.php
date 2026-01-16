@@ -20,9 +20,11 @@
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+            <div
+                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 mr-4 ring-1 ring-blue-100">
+                    <div
+                        class="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 mr-4 ring-1 ring-blue-100">
                         <i class="fas fa-tools text-lg"></i>
                     </div>
                     <div>
@@ -32,38 +34,47 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+            <div
+                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-xl bg-gradient-to-br from-green-100 to-green-50 text-green-600 mr-4 ring-1 ring-green-100">
+                    <div
+                        class="p-3 rounded-xl bg-gradient-to-br from-green-100 to-green-50 text-green-600 mr-4 ring-1 ring-green-100">
                         <i class="fas fa-check-circle text-lg"></i>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 mb-1 font-medium">Disponibles</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ \App\Models\Materiel::where('statut', 'disponible')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-800">
+                            {{ \App\Models\Materiel::where('statut', 'disponible')->count() }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+            <div
+                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-xl bg-gradient-to-br from-yellow-100 to-yellow-50 text-yellow-600 mr-4 ring-1 ring-yellow-100">
+                    <div
+                        class="p-3 rounded-xl bg-gradient-to-br from-yellow-100 to-yellow-50 text-yellow-600 mr-4 ring-1 ring-yellow-100">
                         <i class="fas fa-wrench text-lg"></i>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 mb-1 font-medium">En Maintenance</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ \App\Models\Materiel::where('statut', 'maintenance')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-800">
+                            {{ \App\Models\Materiel::where('statut', 'maintenance')->count() }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+            <div
+                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-xl bg-gradient-to-br from-red-100 to-red-50 text-red-600 mr-4 ring-1 ring-red-100">
+                    <div
+                        class="p-3 rounded-xl bg-gradient-to-br from-red-100 to-red-50 text-red-600 mr-4 ring-1 ring-red-100">
                         <i class="fas fa-times-circle text-lg"></i>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 mb-1 font-medium">Hors Service</p>
-                        <p class="text-2xl font-bold text-gray-800">{{ \App\Models\Materiel::where('statut', 'hors_service')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-800">
+                            {{ \App\Models\Materiel::where('statut', 'hors_service')->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -78,22 +89,20 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
                         </div>
-                        <input type="text"
-                               name="search"
-                               value="{{ request('search') }}"
-                               placeholder="Rechercher par nom de matériel..."
-                               class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/10 focus:border-[#121929]/30 transition-all duration-200 placeholder-gray-400 text-gray-700"
-                               onkeyup="if(event.key === 'Enter') this.form.submit()">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Rechercher par nom de matériel..."
+                            class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/10 focus:border-[#121929]/30 transition-all duration-200 placeholder-gray-400 text-gray-700"
+                            onkeyup="if(event.key === 'Enter') this.form.submit()">
                     </div>
 
                     <!-- Category Filter -->
                     <div>
-                        <select name="categorie_id"
-                                onchange="this.form.submit()"
-                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/10 focus:border-[#121929]/30 transition-all duration-200 text-gray-700">
+                        <select name="categorie_id" onchange="this.form.submit()"
+                            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/10 focus:border-[#121929]/30 transition-all duration-200 text-gray-700">
                             <option value="">Toutes les catégories</option>
                             @foreach ($categories as $category)
-                                <option value="{{ $category->id }}" {{ request('categorie_id') == $category->id ? 'selected' : '' }}>
+                                <option value="{{ $category->id }}"
+                                    {{ request('categorie_id') == $category->id ? 'selected' : '' }}>
                                     {{ $category->nom }}
                                 </option>
                             @endforeach
@@ -102,14 +111,16 @@
 
                     <!-- Status Filter -->
                     <div>
-                        <select name="statut"
-                                onchange="this.form.submit()"
-                                class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/10 focus:border-[#121929]/30 transition-all duration-200 text-gray-700">
+                        <select name="statut" onchange="this.form.submit()"
+                            class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/10 focus:border-[#121929]/30 transition-all duration-200 text-gray-700">
                             <option value="">Tous les statuts</option>
-                            <option value="disponible" {{ request('statut') == 'disponible' ? 'selected' : '' }}>Disponible</option>
+                            <option value="disponible" {{ request('statut') == 'disponible' ? 'selected' : '' }}>Disponible
+                            </option>
                             <option value="reserve" {{ request('statut') == 'reserve' ? 'selected' : '' }}>Réservé</option>
-                            <option value="maintenance" {{ request('statut') == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
-                            <option value="hors_service" {{ request('statut') == 'hors_service' ? 'selected' : '' }}>Hors Service</option>
+                            <option value="maintenance" {{ request('statut') == 'maintenance' ? 'selected' : '' }}>
+                                Maintenance</option>
+                            <option value="hors_service" {{ request('statut') == 'hors_service' ? 'selected' : '' }}>Hors
+                                Service</option>
                         </select>
                     </div>
 
@@ -117,7 +128,7 @@
                     <div class="flex gap-2">
                         @if (request()->hasAny(['search', 'categorie_id', 'statut']))
                             <a href="{{ route('materiels.index') }}"
-                               class="w-full px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300 transition-colors duration-200 flex items-center justify-center">
+                                class="w-full px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-300 transition-colors duration-200 flex items-center justify-center">
                                 <i class="fas fa-times mr-2"></i> Effacer les filtres
                             </a>
                         @endif
@@ -139,7 +150,8 @@
 
             @if ($materiels->isEmpty())
                 <div class="p-12 text-center">
-                    <div class="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 mb-4 ring-1 ring-gray-200">
+                    <div
+                        class="inline-flex items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 mb-4 ring-1 ring-gray-200">
                         <i class="fas fa-tools text-3xl text-gray-300"></i>
                     </div>
                     <h3 class="text-lg font-medium text-gray-700 mb-2">Aucun matériel trouvé</h3>
@@ -169,7 +181,8 @@
                                     Statut
                                 </th>
                                 @if (Auth::user()->role == 'admin')
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 @endif
@@ -181,11 +194,13 @@
                                     onclick="showMaterielDetails({{ $materiel->id }})">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center ring-1 ring-blue-100 group-hover:from-blue-200 group-hover:to-blue-100 transition-all duration-200">
-                                                <i class="fas fa-toolbox text-blue-600"></i>
+                                            <div
+                                                class="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center ring-1 ring-blue-100 group-hover:from-blue-200 group-hover:to-blue-100 transition-all duration-200">
+                                                <i class="fas fa-toolbox text[#121929]"></i>
                                             </div>
                                             <div class="ml-4">
-                                                <div class="text-sm font-semibold text-gray-900 group-hover:text-[#121929] transition-colors">
+                                                <div
+                                                    class="text-sm font-semibold text-gray-900 group-hover:text-[#121929] transition-colors">
                                                     {{ $materiel->nom }}
                                                 </div>
                                                 <div class="text-xs text-gray-500 mt-1">
@@ -195,7 +210,8 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200">
+                                        <span
+                                            class="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r from-gray-100 to-gray-50 text-gray-700 border border-gray-200">
                                             {{ $materiel->categorie->nom }}
                                         </span>
                                     </td>
@@ -208,14 +224,17 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @php
                                             $statusColors = [
-                                                'disponible' => 'from-green-100 to-green-50 text-green-700 border-green-200',
+                                                'disponible' =>
+                                                    'from-green-100 to-green-50 text-green-700 border-green-200',
                                                 'reserve' => 'from-blue-100 to-blue-50 text-blue-700 border-blue-200',
-                                                'maintenance' => 'from-yellow-100 to-yellow-50 text-yellow-700 border-yellow-200',
-                                                'hors_service' => 'from-red-100 to-red-50 text-red-700 border-red-200'
+                                                'maintenance' =>
+                                                    'from-yellow-100 to-yellow-50 text-yellow-700 border-yellow-200',
+                                                'hors_service' => 'from-red-100 to-red-50 text-red-700 border-red-200',
                                             ];
                                         @endphp
-                                        <span class="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r {{ $statusColors[$materiel->statut] }} border">
-                                            @if($materiel->statut == 'disponible')
+                                        <span
+                                            class="px-3 py-1 text-xs font-medium rounded-full bg-gradient-to-r {{ $statusColors[$materiel->statut] }} border">
+                                            @if ($materiel->statut == 'disponible')
                                                 <i class="fas fa-check-circle mr-1"></i>
                                             @elseif($materiel->statut == 'reserve')
                                                 <i class="fas fa-calendar-check mr-1"></i>
@@ -235,8 +254,7 @@
                                                     title="Voir détails">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <button
-                                                    onclick="openEditModal({{ $materiel->id }})"
+                                                <button onclick="openEditModal({{ $materiel->id }})"
                                                     class="p-2 rounded-lg text-gray-600 hover:text-green-600 hover:bg-green-50 transition-colors duration-200"
                                                     title="Modifier">
                                                     <i class="fas fa-edit"></i>
@@ -270,11 +288,13 @@
     <div id="materielModal" class="fixed inset-0 z-50 hidden">
         <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" onclick="closeModal()"></div>
         <div class="fixed inset-0 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0"
+                id="modalContent">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
                         <h3 id="modalTitle" class="text-lg font-semibold text-gray-900"></h3>
-                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100">
+                        <button onclick="closeModal()"
+                            class="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100">
                             <i class="fas fa-times text-lg"></i>
                         </button>
                     </div>
@@ -287,23 +307,24 @@
                             <!-- Left Column -->
                             <div class="space-y-4">
                                 <div>
-                                    <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">Nom du matériel *</label>
+                                    <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">Nom du
+                                        matériel *</label>
                                     <input type="text" id="nom" name="nom"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/15 focus:border-[#121929]/40 transition-all duration-200 placeholder-gray-400"
-                                        placeholder="Ex: Ordinateur Dell XPS 13"
-                                        required>
+                                        placeholder="Ex: Ordinateur Dell XPS 13" required>
                                 </div>
 
                                 <div>
-                                    <label for="numero_serie" class="block text-sm font-medium text-gray-700 mb-2">Numéro de série *</label>
+                                    <label for="numero_serie" class="block text-sm font-medium text-gray-700 mb-2">Numéro
+                                        de série *</label>
                                     <input type="text" id="numero_serie" name="numero_serie"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/15 focus:border-[#121929]/40 transition-all duration-200 placeholder-gray-400"
-                                        placeholder="Ex: SN123456789"
-                                        required>
+                                        placeholder="Ex: SN123456789" required>
                                 </div>
 
                                 <div>
-                                    <label for="categorie_id" class="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
+                                    <label for="categorie_id"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
                                     <select id="categorie_id" name="categorie_id"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/15 focus:border-[#121929]/40 transition-all duration-200"
                                         required>
@@ -318,15 +339,16 @@
                             <!-- Right Column -->
                             <div class="space-y-4">
                                 <div>
-                                    <label for="localisation" class="block text-sm font-medium text-gray-700 mb-2">Localisation *</label>
+                                    <label for="localisation"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Localisation *</label>
                                     <input type="text" id="localisation" name="localisation"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/15 focus:border-[#121929]/40 transition-all duration-200 placeholder-gray-400"
-                                        placeholder="Ex: Salle 101, Bâtiment A"
-                                        required>
+                                        placeholder="Ex: Salle 101, Bâtiment A" required>
                                 </div>
 
                                 <div id="statutField">
-                                    <label for="statut" class="block text-sm font-medium text-gray-700 mb-2">Statut *</label>
+                                    <label for="statut" class="block text-sm font-medium text-gray-700 mb-2">Statut
+                                        *</label>
                                     <select id="statut" name="statut"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/15 focus:border-[#121929]/40 transition-all duration-200">
                                         <option value="disponible">Disponible</option>
@@ -337,7 +359,8 @@
                                 </div>
 
                                 <div>
-                                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                    <label for="description"
+                                        class="block text-sm font-medium text-gray-700 mb-2">Description</label>
                                     <textarea id="description" name="description" rows="3"
                                         class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#121929]/15 focus:border-[#121929]/40 transition-all duration-200 resize-none placeholder-gray-400"
                                         placeholder="Description du matériel..."></textarea>
@@ -391,43 +414,43 @@
         }
 
         function openEditModal(id) {
-    fetch(`/materiels/${id}/json`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('HTTP error');
-            }
-            return response.json();
-        })
-        .then(materiel => {
-            document.getElementById('modalTitle').textContent = 'Modifier le matériel';
-            document.getElementById('materielForm').action = `/materiels/${id}`;
-            document.getElementById('methodField').innerHTML =
-                `<input type="hidden" name="_method" value="PUT">`;
+            fetch(`/materiels/${id}/json`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP error');
+                    }
+                    return response.json();
+                })
+                .then(materiel => {
+                    document.getElementById('modalTitle').textContent = 'Modifier le matériel';
+                    document.getElementById('materielForm').action = `/materiels/${id}`;
+                    document.getElementById('methodField').innerHTML =
+                        `<input type="hidden" name="_method" value="PUT">`;
 
-            document.getElementById('nom').value = materiel.nom ?? '';
-            document.getElementById('numero_serie').value = materiel.numero_serie ?? '';
-            document.getElementById('description').value = materiel.description ?? '';
-            document.getElementById('categorie_id').value = materiel.categorie_id ?? '';
-            document.getElementById('localisation').value = materiel.localisation ?? '';
-            document.getElementById('statut').value = materiel.statut ?? 'disponible';
+                    document.getElementById('nom').value = materiel.nom ?? '';
+                    document.getElementById('numero_serie').value = materiel.numero_serie ?? '';
+                    document.getElementById('description').value = materiel.description ?? '';
+                    document.getElementById('categorie_id').value = materiel.categorie_id ?? '';
+                    document.getElementById('localisation').value = materiel.localisation ?? '';
+                    document.getElementById('statut').value = materiel.statut ?? 'disponible';
 
-            document.getElementById('submitBtn').innerHTML =
-                '<i class="fas fa-save mr-2"></i> Mettre à jour';
+                    document.getElementById('submitBtn').innerHTML =
+                        '<i class="fas fa-save mr-2"></i> Mettre à jour';
 
-            const modal = document.getElementById('materielModal');
-            const content = document.getElementById('modalContent');
+                    const modal = document.getElementById('materielModal');
+                    const content = document.getElementById('modalContent');
 
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        })
-        .catch(error => {
-            console.error(error);
-            alert('Erreur lors du chargement du matériel.');
-        });
-}
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        content.classList.remove('scale-95', 'opacity-0');
+                        content.classList.add('scale-100', 'opacity-100');
+                    }, 10);
+                })
+                .catch(error => {
+                    console.error(error);
+                    alert('Erreur lors du chargement du matériel.');
+                });
+        }
 
 
         function showMaterielDetails(id) {
