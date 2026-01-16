@@ -6,7 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Gestion Stock - @yield('title', 'Tableau de Bord')</title>
+    <!-- Dynamic Title -->
+    <title>
+        @auth
+            @if(Auth::user()->role == 'admin')
+                Gestion Stock - @yield('title', 'Tableau de Bord Admin')
+            @else
+                LabReserve - @yield('title', 'Tableau de Bord Étudiant')
+            @endif
+        @endauth
+    </title>
 
     <!-- Vite CSS (Tailwind) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -91,7 +100,6 @@
             display: flex;
             flex: 1;
             min-height: 0;
-            /* Important for Firefox */
         }
 
         /* Sidebar should fill parent height */
@@ -106,29 +114,52 @@
             flex: 1;
             overflow-y: auto;
         }
+
+        /* Role-specific gradients */
+        .student-navbar {
+            background: linear-gradient(135deg, #1E3A8A 0%, #3730A3 100%);
+        }
+
+        .admin-navbar {
+            background: #0F172A;
+        }
     </style>
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navbar -->
-    <nav class="bg-[#0F172A] text-white border-b border-white/[0.08]">
+    <!-- Navbar - Dynamic -->
+    <nav class="@if(Auth::user()->role == 'admin') admin-navbar @else student-navbar @endif text-white border-b border-white/[0.08]">
         <div class="container mx-auto px-6">
             <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
+                <!-- Logo - Dynamic -->
                 <div class="flex items-center">
                     <a href="{{ route('dashboard') }}" class="flex items-center space-x-3 group">
                         <div class="relative">
-                            <div
-                                class="absolute inset-0 bg-blue-500/10 rounded-lg blur group-hover:blur-sm transition-all duration-300">
+                            <div class="absolute inset-0 @if(Auth::user()->role == 'admin') bg-blue-500/10 @else bg-indigo-500/10 @endif rounded-lg blur group-hover:blur-sm transition-all duration-300">
                             </div>
-                            <div
-                                class="relative bg-white/5 p-2.5 rounded-lg border border-white/10 group-hover:border-blue-500/30 transition-colors duration-300">
-                                <i class="fas fa-boxes text-blue-400 text-lg"></i>
+                            <div class="relative bg-white/5 p-2.5 rounded-lg border border-white/10 @if(Auth::user()->role == 'admin') group-hover:border-blue-500/30 @else group-hover:border-indigo-500/30 @endif transition-colors duration-300">
+                                @if(Auth::user()->role == 'admin')
+                                    <i class="fas fa-boxes text-blue-400 text-lg"></i>
+                                @else
+                                    <i class="fas fa-laptop-code text-indigo-400 text-lg"></i>
+                                @endif
                             </div>
                         </div>
                         <div>
-                            <div class="font-bold text-lg tracking-tight text-white">Gestion Stock</div>
-                            <div class="text-xs text-gray-400">Système de gestion</div>
+                            <div class="font-bold text-lg tracking-tight text-white">
+                                @if(Auth::user()->role == 'admin')
+                                    Gestion Stock
+                                @else
+                                    LabReserve
+                                @endif
+                            </div>
+                            <div class="text-xs text-gray-300">
+                                @if(Auth::user()->role == 'admin')
+                                    Système de gestion
+                                @else
+                                    Portail Étudiant
+                                @endif
+                            </div>
                         </div>
                     </a>
                 </div>
@@ -140,21 +171,19 @@
                             class="flex items-center space-x-3 p-1.5 rounded-lg hover:bg-white/5 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/20">
                             <div class="flex items-center space-x-3">
                                 <div class="relative">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                                        <span
-                                            class="text-xs font-semibold">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                                    <div class="w-8 h-8 rounded-full @if(Auth::user()->role == 'admin') bg-gradient-to-br from-blue-500 to-blue-600 @else bg-gradient-to-br from-indigo-500 to-purple-600 @endif flex items-center justify-center">
+                                        <span class="text-xs font-semibold">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                                     </div>
-                                    <div
-                                        class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#0F172A] {{ Auth::user()->role == 'admin' ? 'bg-red-500' : 'bg-green-500' }}">
+                                    <div class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border @if(Auth::user()->role == 'admin') border-[#0F172A] bg-red-500 @else border-indigo-900 bg-green-500 @endif">
                                     </div>
                                 </div>
                                 <div class="text-left hidden md:block">
                                     <div class="text-sm font-medium">{{ Auth::user()->name }}</div>
-                                    <div class="text-xs text-gray-400">
-                                        {{ Auth::user()->role == 'admin' ? 'Admin' : 'Étudiant' }}</div>
+                                    <div class="text-xs @if(Auth::user()->role == 'admin') text-gray-400 @else text-indigo-200 @endif">
+                                        {{ Auth::user()->role == 'admin' ? 'Admin' : 'Étudiant' }}
+                                    </div>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs text-gray-400" id="chevron-icon"></i>
+                                <i class="fas fa-chevron-down text-xs @if(Auth::user()->role == 'admin') text-gray-400 @else text-indigo-300 @endif" id="chevron-icon"></i>
                             </div>
                         </button>
 
@@ -191,64 +220,90 @@
     <div class="main-container">
         <!-- Sidebar -->
         @auth
-            <aside
-                class="sidebar-transition w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl sidebar-full-height">
+            <aside class="sidebar-transition w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl sidebar-full-height">
                 <!-- Sidebar Header -->
                 <div class="p-6 border-b border-gray-700">
                     <div class="flex items-center space-x-3">
-                        <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow">
-                            <i class="fas fa-boxes text-xl"></i>
+                        <div class="@if(Auth::user()->role == 'admin') bg-gradient-to-br from-blue-500 to-blue-600 @else bg-gradient-to-br from-indigo-500 to-purple-600 @endif p-3 rounded-xl shadow">
+                            @if(Auth::user()->role == 'admin')
+                                <i class="fas fa-boxes text-xl"></i>
+                            @else
+                                <i class="fas fa-user-graduate text-xl"></i>
+                            @endif
+                        </div>
+                        <div>
+                            <div class="font-medium">
+                                @if(Auth::user()->role == 'admin')
+                                    Panneau Admin
+                                @else
+                                    Mon Espace
+                                @endif
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                {{ Auth::user()->role == 'admin' ? 'Administration complète' : 'Réservations & Matériels' }}
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Search -->
-                    <div class="mt-6">
-                        <div class="relative">
-                            <input type="text" placeholder="Rechercher..."
-                                class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <i class="fas fa-search absolute left-3 top-2.5 text-gray-500 text-sm"></i>
+                    <!-- Search - Only show for students -->
+                    @if(Auth::user()->role == 'student')
+                        <div class="mt-6">
+                            <div class="relative">
+                                <input type="text" placeholder="Rechercher un matériel..."
+                                    class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <i class="fas fa-search absolute left-3 top-2.5 text-gray-500 text-sm"></i>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </div>
 
                 <!-- Navigation -->
                 <div class="sidebar-navigation p-4 sidebar-scrollbar">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">Navigation Principale
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
+                        @if(Auth::user()->role == 'admin')
+                            Navigation Principale
+                        @else
+                            Mon Navigation
+                        @endif
                     </h3>
 
                     <nav class="space-y-1">
                         <!-- Dashboard -->
                         <a href="{{ route('dashboard') }}"
                             class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
-                            <div
-                                class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center mr-3 group-hover:bg-blue-500/30">
-                                <i class="fas fa-tachometer-alt text-blue-400"></i>
+                            <div class="w-8 h-8 rounded-lg @if(Auth::user()->role == 'admin') bg-blue-500/20 @else bg-indigo-500/20 @endif flex items-center justify-center mr-3 group-hover:bg-blue-500/30">
+                                <i class="fas fa-tachometer-alt @if(Auth::user()->role == 'admin') text-blue-400 @else text-indigo-400 @endif"></i>
                             </div>
-                            <span class="font-medium">Tableau de Bord</span>
+                            <span class="font-medium">
+                                @if(Auth::user()->role == 'admin')
+                                    Tableau de Bord
+                                @else
+                                    Mon Tableau de Bord
+                                @endif
+                            </span>
                             <div class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                                 <i class="fas fa-chevron-right text-xs text-gray-400"></i>
                             </div>
                         </a>
 
-                        @if (Auth::user()->role == 'admin')
-                            <!-- Admin Section -->
+                        <!-- ADMIN ONLY SECTION -->
+                        @if(Auth::user()->role == 'admin')
                             <div class="mt-6">
                                 <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
-                                    Administration</h3>
+                                    Administration
+                                </h3>
 
                                 <a href="{{ route('materiels.index') }}"
                                     class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
-                                    <div
-                                        class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center mr-3 group-hover:bg-green-500/30">
+                                    <div class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center mr-3 group-hover:bg-green-500/30">
                                         <i class="fas fa-tools text-green-400"></i>
                                     </div>
-                                    <span class="font-medium">Matériels</span>
+                                    <span class="font-medium">Gestion Matériels</span>
                                 </a>
 
                                 <a href="{{ route('categories.index') }}"
                                     class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
-                                    <div
-                                        class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center mr-3 group-hover:bg-purple-500/30">
+                                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center mr-3 group-hover:bg-purple-500/30">
                                         <i class="fas fa-tags text-purple-400"></i>
                                     </div>
                                     <span class="font-medium">Catégories</span>
@@ -256,41 +311,88 @@
                             </div>
                         @endif
 
-                        <!-- Reservations -->
+                        <!-- STUDENT ONLY SECTION -->
+                        @if(Auth::user()->role == 'student')
+                            <div class="mt-6">
+                                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
+                                    Catalogue
+                                </h3>
+
+                                <a href="{{ route('materiels.catalog') }}"
+                                    class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center mr-3 group-hover:bg-emerald-500/30">
+                                        <i class="fas fa-search text-emerald-400"></i>
+                                    </div>
+                                    <span class="font-medium">Explorer Matériels</span>
+                                </a>
+
+                                <a href="{{ route('materiels.available') }}"
+                                    class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
+                                    <div class="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-3 group-hover:bg-cyan-500/30">
+                                        <i class="fas fa-check-circle text-cyan-400"></i>
+                                    </div>
+                                    <span class="font-medium">Disponibles Maintenant</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        <!-- RESERVATIONS SECTION - Dynamic -->
                         <div class="mt-6">
-                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">Réservations
+                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">
+                                @if(Auth::user()->role == 'admin')
+                                    Gestion Réservations
+                                @else
+                                    Mes Réservations
+                                @endif
                             </h3>
 
-                            <a href="{{ route('reservations.index') }}"
-                                class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
-                                <div
-                                    class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center mr-3 group-hover:bg-yellow-500/30">
-                                    <i class="fas fa-calendar-check text-yellow-400"></i>
-                                </div>
-                                <span class="font-medium">Mes Réservations</span>
-                            </a>
-
-                            @if (Auth::user()->role == 'admin')
+                            <!-- For Students -->
+                            @if(Auth::user()->role == 'student')
                                 <a href="{{ route('reservations.index') }}"
                                     class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
-                                    <div
-                                        class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center mr-3 group-hover:bg-red-500/30">
+                                    <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center mr-3 group-hover:bg-yellow-500/30">
+                                        <i class="fas fa-calendar-check text-yellow-400"></i>
+                                    </div>
+                                    <span class="font-medium">Mes Réservations</span>
+                                </a>
+
+                                <a href="{{ route('reservations.create') }}"
+                                    class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
+                                    <div class="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center mr-3 group-hover:bg-orange-500/30">
+                                        <i class="fas fa-plus-circle text-orange-400"></i>
+                                    </div>
+                                    <span class="font-medium">Nouvelle Réservation</span>
+                                </a>
+                            @endif
+
+                            <!-- For Admins -->
+                            @if(Auth::user()->role == 'admin')
+                                <a href="{{ route('reservations.index') }}"
+                                    class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
+                                    <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center mr-3 group-hover:bg-red-500/30">
                                         <i class="fas fa-list-check text-red-400"></i>
                                     </div>
                                     <span class="font-medium">Toutes Réservations</span>
                                 </a>
                             @endif
                         </div>
+
                     </nav>
                 </div>
 
-                <!-- Sidebar Footer -->
+                <!-- Sidebar Footer - Dynamic -->
                 <div class="p-4 border-t border-gray-700 bg-gray-900/50 backdrop-blur-sm">
                     <div class="flex items-center justify-between">
                         <div class="text-xs text-gray-400">
                             <div class="flex items-center">
-                                <div class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                                <span>Système actif</span>
+                                <div class="w-2 h-2 @if(Auth::user()->role == 'admin') bg-green-500 @else bg-indigo-500 @endif rounded-full mr-2 animate-pulse"></div>
+                                <span>
+                                    @if(Auth::user()->role == 'admin')
+                                        Système actif
+                                    @else
+                                        Connecté en tant qu'étudiant
+                                    @endif
+                                </span>
                             </div>
                         </div>
                         <button class="text-gray-400 hover:text-white transition-colors">
@@ -311,7 +413,13 @@
                             <a href="{{ route('dashboard') }}"
                                 class="hover:text-blue-600 transition-colors flex items-center gap-2">
                                 <i class="fas fa-home"></i>
-                                <span>Accueil</span>
+                                <span>
+                                    @if(Auth::user()->role == 'admin')
+                                        Tableau de Bord
+                                    @else
+                                        Mon Tableau de Bord
+                                    @endif
+                                </span>
                             </a>
                             <i class="fas fa-chevron-right text-xs text-gray-400"></i>
                         </li>
@@ -322,8 +430,7 @@
                 <!-- Flash Messages -->
                 <div class="mb-6 space-y-3">
                     @if (session('success'))
-                        <div
-                            class="animate-slideIn p-4 bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 rounded-r-lg shadow">
+                        <div class="animate-slideIn p-4 bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 rounded-r-lg shadow">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
@@ -342,8 +449,7 @@
                     @endif
 
                     @if (session('error'))
-                        <div
-                            class="animate-slideIn p-4 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-r-lg shadow">
+                        <div class="animate-slideIn p-4 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-r-lg shadow">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
@@ -362,8 +468,7 @@
                     @endif
 
                     @if (session('info'))
-                        <div
-                            class="animate-slideIn p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 rounded-r-lg shadow">
+                        <div class="animate-slideIn p-4 bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-500 rounded-r-lg shadow">
                             <div class="flex justify-between items-center">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0">
@@ -382,22 +487,41 @@
                     @endif
                 </div>
 
-                <!-- Page Header -->
-                <!-- Page Header -->
+                <!-- Page Header - Dynamic -->
                 <div class="mb-8">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <div class="flex items-center gap-3 mb-2">
-                                <div
-                                    class="p-3 rounded-xl bg-gradient-to-br from-[#121929]/10 to-[#1a2336]/10 border border-[#121929]/20 shadow-sm">
-                                    <i class="fas @yield('icon', 'fa-home') text-[#121929] text-xl"></i>
+                                <div class="p-3 rounded-xl @if(Auth::user()->role == 'admin') bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 @else bg-gradient-to-br from-indigo-50 to-purple-100 border border-indigo-200 @endif shadow-sm">
+                                    @if(Auth::user()->role == 'admin')
+                                        <i class="fas @yield('icon', 'fa-tachometer-alt') text-blue-600 text-xl"></i>
+                                    @else
+                                        <i class="fas @yield('icon', 'fa-user-graduate') text-indigo-600 text-xl"></i>
+                                    @endif
                                 </div>
                                 <div>
-                                    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
-                                        @yield('title', 'Tableau de Bord')
-                                    </h1>
-                                    @hasSection('subtitle')
-                                        <p class="text-gray-600 mt-1 text-sm md:text-base">@yield('subtitle')</p>
+                                    @if(Auth::user()->role == 'admin')
+                                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+                                            @yield('title', 'Tableau de Bord Admin')
+                                        </h1>
+                                        <p class="text-gray-600 mt-1 text-sm md:text-base">
+                                            @hasSection('subtitle')
+                                                @yield('subtitle')
+                                            @else
+                                                Gestion complète du système de stock
+                                            @endif
+                                        </p>
+                                    @else
+                                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+                                            @yield('title', 'Mon Tableau de Bord Étudiant')
+                                        </h1>
+                                        <p class="text-gray-600 mt-1 text-sm md:text-base">
+                                            @hasSection('subtitle')
+                                                @yield('subtitle')
+                                            @else
+                                                Gérez vos réservations de matériel
+                                            @endif
+                                        </p>
                                     @endif
                                 </div>
                             </div>
@@ -488,10 +612,17 @@
                     chevronIcon.classList.add('transition-transform', 'duration-200');
                 }
             }
+
+            // Role-based active navigation
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-card-hover').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active-nav', 'bg-gray-700/70');
+                }
+            });
         });
     </script>
 
     @stack('scripts')
 </body>
-
 </html>

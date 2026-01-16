@@ -8,7 +8,7 @@ use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 Route::get('/materiels/{materiel}/json', [MaterielController::class, 'json'])

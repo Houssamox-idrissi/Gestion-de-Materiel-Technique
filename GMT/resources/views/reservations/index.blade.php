@@ -173,13 +173,6 @@
                         </h2>
                         <p id="reservationsFoundCount" class="text-sm text-gray-600 mt-1">{{ $reservations->total() }} réservation(s) trouvée(s)</p>
                     </div>
-
-                    @if (Auth::user()->role == 'admin')
-                        <a href="{{ route('reservations.admin') }}"
-                            class="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:ring-offset-1 transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.98] text-sm font-medium">
-                            <i class="fas fa-cog mr-2"></i> Gestion Admin
-                        </a>
-                    @endif
                 </div>
             </div>
 
