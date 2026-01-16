@@ -81,6 +81,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('reservations.')->gr
 });
 Route::get('/reservations/{reservation}/json', [ReservationController::class, 'json'])
     ->middleware('auth');
-
+Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy'])
+    ->name('reservations.destroy');
 
 require __DIR__ . '/auth.php';

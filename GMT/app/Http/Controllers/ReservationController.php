@@ -48,36 +48,44 @@ class ReservationController extends Controller
 
     public function update(Request $request, Reservation $reservation)
     {
-        try {
-            $validated = $request->validate([
-                'materiel_id' => 'required|exists:materiels,id',
-                'date_reservation' => 'required|date',
-                'heure_debut' => 'required|date_format:H:i',  // Form sends HH:MM
-                'heure_fin' => 'required|date_format:H:i|after:heure_debut',  // Form sends HH:MM
-                'objet' => 'required|string|max:255',
-                'commentaire' => 'nullable|string',
-                'statut' => 'sometimes|in:en_attente,confirmee,annulee,terminee',
-            ]);
+        $request->validate([
+            'materiel_id' => 'required|exists:materiels,id',
+            'date_reservation' => 'required|date|after_or_equal:today',
+            'heure_debut' => 'required|date_format:H:i',
+            'heure_fin' => 'required|date_format:H:i|after:heure_debut',
+            'objet' => 'required|string|max:255',
+            'commentaire' => 'nullable|string',
+        ]);
 
-            // ADD SECONDS FOR DATABASE
-            $validated['heure_debut'] = $validated['heure_debut'] . ':00';
-            $validated['heure_fin'] = $validated['heure_fin'] . ':00';
+        $isAvailable = $this->checkAvailability(
+            $request->materiel_id,
+            $request->date_reservation,
+            $request->heure_debut,
+            $request->heure_fin,
+            $reservation->id // IMPORTANT for update
+        );
 
-            $reservation->update($validated);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Réservation mise à jour avec succès.',
-                'redirect' => route('reservations.index')
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        if (!$isAvailable) {
             return response()->json([
                 'success' => false,
-                'errors' => $e->errors(),
-                'message' => 'Veuillez corriger les erreurs dans le formulaire.'
+                'errors' => [
+                    'heure_debut' => ['Ce créneau horaire est déjà réservé.'],
+                    'heure_fin' => ['Ce créneau horaire est déjà réservé.']
+                ]
             ], 422);
         }
+
+        $reservation->update($request->all());
+
+         session()->flash('reservation_updated', true);
+        session()->flash('success', 'Réservation modifiée avec succès.');
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('reservations.index')
+        ]);
     }
+
 
     public function showJson(Reservation $reservation)
     {
@@ -357,5 +365,43 @@ class ReservationController extends Controller
     public function json(Reservation $reservation)
     {
         return response()->json($reservation);
+    }
+    public function destroy(Reservation $reservation)
+    {
+        try {
+            // Vérifier les permissions
+            if (Auth::id() !== $reservation->user_id && Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas la permission de supprimer cette réservation.'
+                ], 403);
+            }
+
+            // Empêcher la suppression des réservations actives
+            if (in_array($reservation->statut, ['confirmee', 'en_cours'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Impossible de supprimer une réservation confirmée ou en cours.'
+                ], 400);
+            }
+
+            // Supprimer la réservation
+            $reservation->delete();
+
+            // STOCKER LE MESSAGE DANS LA SESSION POUR LE TOAST
+            session()->flash('deleted_reservation', true);
+            session()->flash('success', 'Réservation supprimée avec succès.');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Réservation supprimée avec succès.',
+                'redirect' => route('reservations.index')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression : ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
