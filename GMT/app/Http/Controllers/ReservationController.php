@@ -46,10 +46,6 @@ class ReservationController extends Controller
         return view('reservations.index', compact('reservations'));
     }
 
-    // ReservationController.php
-
-
-
     public function update(Request $request, Reservation $reservation)
     {
         try {
@@ -281,51 +277,7 @@ class ReservationController extends Controller
             ->with('success', 'Réservation mise à jour avec succès.');
     }
 
-//     public function update(Request $request, Reservation $reservation)
-// {
-//     try {
-//         // Format time to include seconds before validation
-//         if ($request->heure_debut && strlen($request->heure_debut) == 5) {
-//             $request->merge(['heure_debut' => $request->heure_debut . ':00']);
-//         }
 
-//         if ($request->heure_fin && strlen($request->heure_fin) == 5) {
-//             $request->merge(['heure_fin' => $request->heure_fin . ':00']);
-//         }
-
-//         $validated = $request->validate([
-//             'materiel_id' => 'required|exists:materiels,id',
-//             'date_reservation' => 'required|date',
-//             'heure_debut' => 'required|date_format:H:i:s',
-//             'heure_fin' => 'required|date_format:H:i:s|after:heure_debut',
-//             'objet' => 'required|string|max:255',
-//             'commentaire' => 'nullable|string',
-//             'statut' => 'sometimes|in:en_attente,confirmee,annulee,terminee',
-//         ]);
-
-//         $reservation->update($validated);
-
-//         // Return JSON response for AJAX
-//         return response()->json([
-//             'success' => true,
-//             'message' => 'Réservation mise à jour avec succès.',
-//             'redirect' => route('reservations.index')
-//         ]);
-
-//     } catch (\Illuminate\Validation\ValidationException $e) {
-//         // Return validation errors as JSON
-//         return response()->json([
-//             'success' => false,
-//             'errors' => $e->errors(),
-//             'message' => 'Veuillez corriger les erreurs dans le formulaire.'
-//         ], 422);
-//     } catch (\Exception $e) {
-//         return response()->json([
-//             'success' => false,
-//             'message' => 'Une erreur est survenue: ' . $e->getMessage()
-//         ], 500);
-//     }
-// }
 
 
     /**

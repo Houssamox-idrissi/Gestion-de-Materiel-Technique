@@ -52,44 +52,7 @@
          </script>
      @endif
      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-         @if (session('success') && session('reservation_created'))
-             <div id="successToast"
-                 class="fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg bg-green-600 text-white flex items-center animate-fade-in-up">
-                 <i class="fas fa-check-circle mr-2"></i>
-                 <span>{{ session('success') }}</span>
-                 <button onclick="document.getElementById('successToast').remove()"
-                     class="ml-4 text-white/80 hover:text-white">
-                     <i class="fas fa-times"></i>
-                 </button>
-             </div>
-
-             <style>
-                 @keyframes fadeInUp {
-                     from {
-                         opacity: 0;
-                         transform: translateY(20px);
-                     }
-
-                     to {
-                         opacity: 1;
-                         transform: translateY(0);
-                     }
-                 }
-
-                 .animate-fade-in-up {
-                     animation: fadeInUp 0.3s ease-out;
-                 }
-             </style>
-
-             <script>
-                 // Supprimer le toast après 5 secondes
-                 setTimeout(() => {
-                     const toast = document.getElementById('successToast');
-                     if (toast) toast.remove();
-                 }, 5000);
-             </script>
-         @endif
-         <!-- Statistics Cards -->
+              <!-- Statistics Cards -->
          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
              <div
                  class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
@@ -588,322 +551,259 @@
      </div>
  @endsection
 
- @push('scripts')
-     <script>
-         function openCreateModal() {
-             // Set modal title and form action
-             document.getElementById('modalTitle').textContent = 'Créer une nouvelle réservation';
-             document.getElementById('reservationForm').action = "{{ route('reservations.store') }}";
-             document.getElementById('methodField').innerHTML = '';
+@push('scripts')
+<script>
+    // ===== MODAL FUNCTIONS =====
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Créer une nouvelle réservation';
+        document.getElementById('reservationForm').action = "{{ route('reservations.store') }}";
+        document.getElementById('methodField').innerHTML = '';
 
-             // Reset form fields
-             document.getElementById('materiel_id').value = '';
-             document.getElementById('date_reservation').value = '';
-             document.getElementById('heure_debut').value = '';
-             document.getElementById('heure_fin').value = '';
-             document.getElementById('objet').value = '';
-             document.getElementById('commentaire').value = '';
+        // Reset fields
+        ['materiel_id','date_reservation','heure_debut','heure_fin','objet','commentaire'].forEach(f => {
+            const input = document.getElementById(f);
+            if(input) input.value = '';
+        });
 
-             // Hide status field for create
-             document.getElementById('statusField').classList.add('hidden');
+        document.getElementById('statusField').classList.add('hidden');
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-plus mr-2"></i> Créer';
+        showModal();
+        resetFormErrors();
+    }
 
-             // Set submit button text
-             document.getElementById('submitBtn').innerHTML = '<i class="fas fa-plus mr-2"></i> Créer';
+    function openEditModal(id) {
+        fetch(`/reservations/${id}/json`)
+            .then(r => r.ok ? r.json() : Promise.reject('HTTP error'))
+            .then(reservation => {
+                document.getElementById('modalTitle').textContent = 'Modifier la réservation';
+                document.getElementById('reservationForm').action = `/reservations/${id}`;
+                document.getElementById('methodField').innerHTML = `<input type="hidden" name="_method" value="PUT">`;
 
-             // Show modal with animation
-             const modal = document.getElementById('reservationModal');
-             const content = document.getElementById('modalContent');
-             modal.classList.remove('hidden');
+                document.getElementById('materiel_id').value = reservation.materiel_id || '';
+                document.getElementById('date_reservation').value = reservation.date_reservation ? new Date(reservation.date_reservation).toISOString().split('T')[0] : '';
+                document.getElementById('heure_debut').value = reservation.heure_debut?.slice(0,5) || '';
+                document.getElementById('heure_fin').value = reservation.heure_fin?.slice(0,5) || '';
+                document.getElementById('objet').value = reservation.objet || '';
+                document.getElementById('commentaire').value = reservation.commentaire || '';
 
-             setTimeout(() => {
-                 content.classList.remove('scale-95', 'opacity-0');
-                 content.classList.add('scale-100', 'opacity-100');
-             }, 10);
+                // Status for admin
+                if ({{ Auth::user()->role == 'admin' ? 'true' : 'false' }}) {
+                    document.getElementById('statusField').classList.remove('hidden');
+                    document.getElementById('statut').value = reservation.statut || 'en_attente';
+                } else {
+                    document.getElementById('statusField').classList.add('hidden');
+                }
 
-             resetFormErrors();
-         }
+                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-2"></i> Mettre à jour';
+                showModal();
+                resetFormErrors();
+            })
+            .catch(e => { console.error(e); alert('Erreur lors du chargement de la réservation.'); });
+    }
 
-         function openEditModal(id) {
-             // Fetch reservation data
-             fetch(`/reservations/${id}/json`)
-                 .then(response => {
-                     if (!response.ok) {
-                         throw new Error('HTTP error');
-                     }
-                     return response.json();
-                 })
-                 .then(reservation => {
-                     // Set modal title and form action
-                     document.getElementById('modalTitle').textContent = 'Modifier la réservation';
-                     document.getElementById('reservationForm').action = `/reservations/${id}`;
-                     document.getElementById('methodField').innerHTML =
-                         `<input type="hidden" name="_method" value="PUT">`;
+    function showModal() {
+        const modal = document.getElementById('reservationModal');
+        const content = document.getElementById('modalContent');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            content.classList.remove('scale-95','opacity-0');
+            content.classList.add('scale-100','opacity-100');
+        }, 10);
+    }
 
-                     // Fill form fields
-                     document.getElementById('materiel_id').value = reservation.materiel_id || '';
+    function closeModal() {
+        const modal = document.getElementById('reservationModal');
+        const content = document.getElementById('modalContent');
+        content.classList.remove('scale-100','opacity-100');
+        content.classList.add('scale-95','opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
 
-                     // Format date for input field (YYYY-MM-DD)
-                     const date = new Date(reservation.date_reservation);
-                     const formattedDate = date.toISOString().split('T')[0];
-                     document.getElementById('date_reservation').value = formattedDate;
+    // ===== TOASTS =====
+   function showToast(message, type = 'success') {
+    // Remove any existing toast
+    document.querySelectorAll('.custom-toast').forEach(t => t.remove());
 
-                     document.getElementById('heure_debut').value = reservation.heure_debut || '';
-                     document.getElementById('heure_fin').value = reservation.heure_fin || '';
-                     document.getElementById('objet').value = reservation.objet || '';
-                     document.getElementById('commentaire').value = reservation.commentaire || '';
+    const container = document.querySelector('.container'); // inside your page
+    if (!container) return;
 
-                     // Show and set status field for admin only
-                     if ({{ Auth::user()->role == 'admin' ? 'true' : 'false' }}) {
-                         document.getElementById('statusField').classList.remove('hidden');
-                         document.getElementById('statut').value = reservation.statut || 'en_attente';
-                     } else {
-                         document.getElementById('statusField').classList.add('hidden');
-                     }
+    const toast = document.createElement('div');
+    toast.className = `custom-toast relative mb-4 px-6 py-3 rounded-lg shadow-lg flex items-center justify-between text-white animate-fade-in-up ${
+        type === 'success' ? 'bg-green-600' :
+        type === 'error' ? 'bg-red-600' :
+        'bg-blue-600'
+    }`;
 
-                     // Set submit button text
-                     document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save mr-2"></i> Mettre à jour';
-
-                     // Show modal with animation
-                     const modal = document.getElementById('reservationModal');
-                     const content = document.getElementById('modalContent');
-                     modal.classList.remove('hidden');
-
-                     setTimeout(() => {
-                         content.classList.remove('scale-95', 'opacity-0');
-                         content.classList.add('scale-100', 'opacity-100');
-                     }, 10);
-
-                     resetFormErrors();
-                 })
-                 .catch(error => {
-                     console.error('Error:', error);
-                     alert('Erreur lors du chargement de la réservation.');
-                 });
-         }
-
-         function showReservationDetails(id) {
-             window.location.href = `/reservations/${id}`;
-         }
-
-         function closeModal() {
-             const content = document.getElementById('modalContent');
-             content.classList.remove('scale-100', 'opacity-100');
-             content.classList.add('scale-95', 'opacity-0');
-
-             setTimeout(() => {
-                 document.getElementById('reservationModal').classList.add('hidden');
-             }, 200);
-         }
-
-         function resetFormErrors() {
-             document.querySelectorAll('.text-red-500.text-xs').forEach(el => el.remove());
-             document.querySelectorAll('.border-red-500').forEach(el => {
-                 el.classList.remove('border-red-500');
-                 el.classList.add('border-gray-200');
-             });
-         }
-
-         // Handle form submission
-         // Handle form submission with AJAX
-         document.addEventListener('DOMContentLoaded', function() {
-             const reservationForm = document.getElementById('reservationForm');
-             if (reservationForm) {
-                 reservationForm.addEventListener('submit', async function(e) {
-                     e.preventDefault();
-
-                     const submitBtn = document.getElementById('submitBtn');
-                     const originalHtml = submitBtn.innerHTML;
-                     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
-                     submitBtn.disabled = true;
-
-                     // Récupérer le token CSRF
-                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute(
-                         'content');
-
-                     // Préparer les données du formulaire
-                     const formData = new FormData(this);
-                     const url = this.action;
-                     const method = this.querySelector('[name="_method"]')?.value || 'POST';
-
-                     try {
-                         const response = await fetch(url, {
-                             method: method,
-                             body: formData,
-                             headers: {
-                                 'X-Requested-With': 'XMLHttpRequest',
-                                 'Accept': 'application/json',
-                                 'X-CSRF-TOKEN': csrfToken
-                             }
-                         });
-
-                         const data = await response.json();
-
-                         if (data.success) {
-                             // Afficher un message de succès
-                             showToast(data.message, 'success');
-
-                             // Fermer le modal
-                             closeModal();
-
-                             // Rediriger après un délai
-                             setTimeout(() => {
-                                 if (data.redirect) {
-                                     window.location.href = data.redirect;
-                                 } else {
-                                     window.location.reload();
-                                 }
-                             }, 1500);
-                         } else {
-                             // Afficher les erreurs de validation
-                             if (data.errors) {
-                                 resetFormErrors();
-                                 Object.keys(data.errors).forEach(field => {
-                                     const input = document.querySelector(`[name="${field}"]`);
-                                     const errorDiv = document.createElement('div');
-                                     errorDiv.className =
-                                         'text-red-500 text-xs mt-1 flex items-center';
-                                     errorDiv.innerHTML =
-                                         `<i class="fas fa-exclamation-circle mr-1"></i> ${data.errors[field][0]}`;
-
-                                     if (input) {
-                                         input.classList.add('border-red-500',
-                                             'focus:border-red-500', 'focus:ring-red-500');
-                                         input.parentNode.appendChild(errorDiv);
-                                     } else {
-                                         // Si l'erreur n'est pas liée à un champ spécifique, l'afficher en haut
-                                         showToast(data.errors[field][0], 'error');
-                                     }
-                                 });
-                             } else if (data.message) {
-                                 showToast(data.message, 'error');
-                             }
-
-                             submitBtn.innerHTML = originalHtml;
-                             submitBtn.disabled = false;
-                         }
-                     } catch (error) {
-                         console.error('Error:', error);
-                         showToast('Une erreur est survenue lors de la soumission', 'error');
-                         submitBtn.innerHTML = originalHtml;
-                         submitBtn.disabled = false;
-                     }
-                 });
-             }
-
-             // Fonction pour afficher les toasts
-             function showToast(message, type = 'info') {
-                 // Supprimer les toasts existants
-                 document.querySelectorAll('.custom-toast').forEach(toast => toast.remove());
-
-                 const toast = document.createElement('div');
-                 toast.className = `custom-toast fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg text-white flex items-center ${
-            type === 'success' ? 'bg-green-600' :
-            type === 'error' ? 'bg-red-600' : 'bg-blue-600'
-        }`;
-                 toast.innerHTML = `
-            <i class="fas ${
-                type === 'success' ? 'fa-check-circle' :
-                type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'
-            } mr-2"></i>
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-exclamation-circle':'fa-info-circle'} mr-2"></i>
             <span>${message}</span>
-            <button onclick="this.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
+        </div>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-white/80 hover:text-white">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
 
-                 document.body.appendChild(toast);
+    // Insert at top of container
+    container.prepend(toast);
 
-                 // Supprimer après 5 secondes
-                 setTimeout(() => {
-                     if (toast.parentNode) {
-                         toast.remove();
-                     }
-                 }, 5000);
-             }
-
-             // Fonction pour réinitialiser les erreurs
-             function resetFormErrors() {
-                 // Supprimer les messages d'erreur existants
-                 document.querySelectorAll('.text-red-500.text-xs').forEach(el => el.remove());
-
-                 // Réinitialiser les bordures
-                 document.querySelectorAll('.border-red-500').forEach(el => {
-                     el.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
-                     el.classList.add('border-gray-200', 'focus:border-[#121929]/40',
-                         'focus:ring-[#121929]/15');
-                 });
-             }
-
-             // Fermer le modal avec ESC
-             document.addEventListener('keydown', function(e) {
-                 if (e.key === 'Escape') {
-                     closeModal();
-                 }
-             });
+    // Auto-remove after 5s
+    setTimeout(() => toast.remove(), 5000);
+}
 
 
-             // Écouter les changements pour vérifier la disponibilité
-             document.getElementById('materiel_id')?.addEventListener('change', checkRealTimeAvailability);
-             document.getElementById('date_reservation')?.addEventListener('change', checkRealTimeAvailability);
-             document.getElementById('heure_debut')?.addEventListener('change', checkRealTimeAvailability);
-             document.getElementById('heure_fin')?.addEventListener('change', checkRealTimeAvailability);
-         });
+    // ===== FORM ERROR HANDLING =====
+    function resetFormErrors() {
+        document.querySelectorAll('.text-red-500.text-xs').forEach(el=>el.remove());
+        document.querySelectorAll('.border-red-500').forEach(el=>{
+            el.classList.remove('border-red-500','focus:border-red-500','focus:ring-red-500');
+            el.classList.add('border-gray-200','focus:border-[#121929]/40','focus:ring-[#121929]/15');
+        });
+    }
 
-         // Vérification en temps réel de la disponibilité
-         async function checkRealTimeAvailability() {
-             const materielId = document.getElementById('materiel_id').value;
-             const date = document.getElementById('date_reservation').value;
-             const heureDebut = document.getElementById('heure_debut').value;
-             const heureFin = document.getElementById('heure_fin').value;
+    // ===== AJAX FORM SUBMISSION =====
+    document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('reservationForm');
+    if (!form) return;
 
-             if (materielId && date && heureDebut && heureFin) {
-                 try {
-                     const response = await fetch('/reservations/check-availability', {
-                         method: 'POST',
-                         headers: {
-                             'Content-Type': 'application/json',
-                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                 'content'),
-                             'Accept': 'application/json'
-                         },
-                         body: JSON.stringify({
-                             materiel_id: materielId,
-                             date_reservation: date,
-                             heure_debut: heureDebut,
-                             heure_fin: heureFin
-                         })
-                     });
+    form.addEventListener('submit', async function (e) {
+    e.preventDefault();
 
-                     const data = await response.json();
+    const submitBtn = document.getElementById('submitBtn');
+    const originalHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Traitement...';
+    submitBtn.disabled = true;
 
-                     // Afficher un message d'info
-                     const messageDiv = document.getElementById('availabilityMessage') ||
-                         createAvailabilityMessageDiv();
+    resetFormErrors();
 
-                     messageDiv.className = data.available ?
-                         'p-3 mt-2 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm' :
-                         'p-3 mt-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-                     messageDiv.innerHTML = `
-                <div class="flex items-center">
-                    <i class="fas ${data.available ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
-                    <span>${data.message}</span>
-                </div>
-            `;
-                 } catch (error) {
-                     console.error('Erreur de vérification:', error);
-                 }
-             }
-         }
+    // Collect all input values as JSON
+    const payload = {
+        materiel_id: document.getElementById('materiel_id').value,
+        date_reservation: document.getElementById('date_reservation').value,
+        heure_debut: document.getElementById('heure_debut').value,
+        heure_fin: document.getElementById('heure_fin').value,
+        objet: document.getElementById('objet').value,
+        commentaire: document.getElementById('commentaire').value
+    };
 
-         function createAvailabilityMessageDiv() {
-             const div = document.createElement('div');
-             div.id = 'availabilityMessage';
-             const formGroup = document.getElementById('heure_fin').closest('.space-y-4');
-             if (formGroup) {
-                 formGroup.appendChild(div);
-             }
-             return div;
-         }
-     </script>
- @endpush
+    // Add status if visible (admin edit)
+    if (!document.getElementById('statusField').classList.contains('hidden')) {
+        payload.statut = document.getElementById('statut').value;
+    }
+
+    // Determine method (POST for create, PUT for update)
+    const method = form.querySelector('[name="_method"]')?.value || 'POST';
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST', // Laravel uses POST + _method
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                ...payload,
+                _method: method
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message, 'success'); // ✅ toast shows
+            closeModal();
+            setTimeout(() => {
+                data.redirect ? (window.location.href = data.redirect) : window.location.reload();
+            }, 1500);
+        } else {
+            if (data.errors) {
+                Object.keys(data.errors).forEach(f => {
+                    const input = document.querySelector(`[name="${f}"]`);
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'text-red-500 text-xs mt-1 flex items-center';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i> ${data.errors[f][0]}`;
+                    if (input) {
+                        input.classList.add('border-red-500','focus:border-red-500','focus:ring-red-500');
+                        const old = input.parentNode.querySelector('.text-red-500');
+                        if (old) old.remove();
+                        input.parentNode.appendChild(errorDiv);
+                    } else {
+                        showToast(data.errors[f][0], 'error');
+                    }
+                });
+            } else if (data.message) {
+                showToast(data.message, 'error');
+            }
+            submitBtn.innerHTML = originalHtml;
+            submitBtn.disabled = false;
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Une erreur est survenue lors de la soumission', 'error');
+        submitBtn.innerHTML = originalHtml;
+        submitBtn.disabled = false;
+    }
+});
+
+});
+
+
+    // ===== REAL-TIME AVAILABILITY CHECK =====
+    ['materiel_id','date_reservation','heure_debut','heure_fin'].forEach(id=>{
+        document.getElementById(id)?.addEventListener('change', checkRealTimeAvailability);
+    });
+
+    async function checkRealTimeAvailability(){
+        const materielId = document.getElementById('materiel_id').value;
+        const date = document.getElementById('date_reservation').value;
+        const start = document.getElementById('heure_debut').value;
+        const end = document.getElementById('heure_fin').value;
+
+        if(!materielId || !date || !start || !end) return;
+
+        try {
+            const res = await fetch('/reservations/check-availability',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'Accept':'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    materiel_id:materielId,
+                    date_reservation: date,
+                    heure_debut: start,
+                    heure_fin: end
+                })
+            });
+            const data = await res.json();
+            let msgDiv = document.getElementById('availabilityMessage') || createAvailabilityMessageDiv();
+            msgDiv.className = data.available ?
+                'p-3 mt-2 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm' :
+                'p-3 mt-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm';
+            msgDiv.innerHTML = `<div class="flex items-center">
+                <i class="fas ${data.available?'fa-check-circle':'fa-exclamation-circle'} mr-2"></i>
+                <span>${data.message}</span>
+            </div>`;
+        } catch(err){ console.error('Erreur de vérification:',err); }
+    }
+
+    function createAvailabilityMessageDiv(){
+        const div = document.createElement('div');
+        div.id = 'availabilityMessage';
+        const container = document.getElementById('heure_fin').closest('.space-y-4');
+        if(container) container.appendChild(div);
+        return div;
+    }
+
+    // ===== ESC KEY CLOSE =====
+    document.addEventListener('keydown', e=>{
+        if(e.key==='Escape') closeModal();
+    });
+</script>
+@endpush
+
