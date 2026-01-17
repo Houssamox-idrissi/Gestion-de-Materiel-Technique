@@ -320,7 +320,7 @@
                             <div
                                 class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors">
                                 <i class="fas fa-key"></i>
-                            </div>
+                             </div>
                             <button type="button" onclick="togglePassword()"
                                 class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
                                 <i id="passwordIcon" class="far fa-eye"></i>
