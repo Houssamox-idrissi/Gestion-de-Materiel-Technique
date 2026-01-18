@@ -43,6 +43,7 @@ Route::get('/categories/{categorie}/edit', [CategorieController::class, 'edit'])
 
 Route::resource('materiels', MaterielController::class)->middleware('auth');
 
+
 Route::middleware(['auth'])->group(function () {
     // Route pour JSON (doit être avant resource)
     Route::get('/reservations/{reservation}/json', [ReservationController::class, 'showJson'])

@@ -347,21 +347,13 @@
                             </h3>
 
                             <!-- For Students -->
-                            @if(Auth::user()->role == 'student')
+                            @if(Auth::user()->role == 'etudiant')
                                 <a href="{{ route('reservations.index') }}"
                                     class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
                                     <div class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center mr-3 group-hover:bg-yellow-500/30">
                                         <i class="fas fa-calendar-check text-yellow-400"></i>
                                     </div>
                                     <span class="font-medium">Mes Réservations</span>
-                                </a>
-
-                                <a href="{{ route('reservations.create') }}"
-                                    class="nav-card-hover flex items-center px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all relative group">
-                                    <div class="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center mr-3 group-hover:bg-orange-500/30">
-                                        <i class="fas fa-plus-circle text-orange-400"></i>
-                                    </div>
-                                    <span class="font-medium">Nouvelle Réservation</span>
                                 </a>
                             @endif
 

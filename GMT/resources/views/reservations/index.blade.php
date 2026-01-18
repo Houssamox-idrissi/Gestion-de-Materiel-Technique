@@ -43,69 +43,68 @@
 
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-                <div class="flex items-center">
-                    <div
-                        class="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 mr-4 ring-1 ring-blue-100">
-                        <i class="fas fa-calendar-alt text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1 font-medium">Total Réservations</p>
-                        <p id="totalReservationsCount" class="text-2xl font-bold text-gray-800">{{ $reservations->total() }}</p>
-                    </div>
-                </div>
-            </div>
+       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    @php
+        // Create base query
+        $baseQuery = Auth::user()->role == 'admin'
+            ? \App\Models\Reservation::query()
+            : \App\Models\Reservation::where('user_id', Auth::id());
 
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-                <div class="flex items-center">
-                    <div
-                        class="p-3 rounded-xl bg-gradient-to-br from-yellow-100 to-yellow-50 text-yellow-600 mr-4 ring-1 ring-yellow-100">
-                        <i class="fas fa-clock text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1 font-medium">En Attente</p>
-                        <p id="pendingCount" class="text-2xl font-bold text-gray-800">
-                            {{ \App\Models\Reservation::where('statut', 'en_attente')->count() }}
-                        </p>
-                    </div>
-                </div>
-            </div>
+        // Calculate counts with fresh queries
+        $totalCount = $baseQuery->count();
+        $pendingCount = (clone $baseQuery)->where('statut', 'en_attente')->count();
+        $confirmedCount = (clone $baseQuery)->where('statut', 'confirmee')->count();
+        $cancelledCount = (clone $baseQuery)->where('statut', 'annulee')->count();
+    @endphp
 
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-                <div class="flex items-center">
-                    <div
-                        class="p-3 rounded-xl bg-gradient-to-br from-green-100 to-green-50 text-green-600 mr-4 ring-1 ring-green-100">
-                        <i class="fas fa-check-circle text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1 font-medium">Confirmées</p>
-                        <p id="confirmedCount" class="text-2xl font-bold text-gray-800">
-                            {{ \App\Models\Reservation::where('statut', 'confirmee')->count() }}
-                        </p>
-                    </div>
-                </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-center">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 mr-4 ring-1 ring-blue-100">
+                <i class="fas fa-calendar-alt text-lg"></i>
             </div>
-
-            <div
-                class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-                <div class="flex items-center">
-                    <div
-                        class="p-3 rounded-xl bg-gradient-to-br from-red-100 to-red-50 text-red-600 mr-4 ring-1 ring-red-100">
-                        <i class="fas fa-times-circle text-lg"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1 font-medium">Annulées</p>
-                        <p id="cancelledCount" class="text-2xl font-bold text-gray-800">
-                            {{ \App\Models\Reservation::where('statut', 'annulee')->count() }}
-                        </p>
-                    </div>
-                </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1 font-medium">Total Réservations</p>
+                <p id="totalReservationsCount" class="text-2xl font-bold text-gray-800">{{ $totalCount }}</p>
             </div>
         </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-center">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-yellow-100 to-yellow-50 text-yellow-600 mr-4 ring-1 ring-yellow-100">
+                <i class="fas fa-clock text-lg"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1 font-medium">En Attente</p>
+                <p id="pendingCount" class="text-2xl font-bold text-gray-800">{{ $pendingCount }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-center">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-green-100 to-green-50 text-green-600 mr-4 ring-1 ring-green-100">
+                <i class="fas fa-check-circle text-lg"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1 font-medium">Confirmées</p>
+                <p id="confirmedCount" class="text-2xl font-bold text-gray-800">{{ $confirmedCount }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+        <div class="flex items-center">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-red-100 to-red-50 text-red-600 mr-4 ring-1 ring-red-100">
+                <i class="fas fa-times-circle text-lg"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600 mb-1 font-medium">Annulées</p>
+                <p id="cancelledCount" class="text-2xl font-bold text-gray-800">{{ $cancelledCount }}</p>
+            </div>
+        </div>
+    </div>
+</div>
 
         <!-- Filters & Search -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
